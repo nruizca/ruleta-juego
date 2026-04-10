@@ -64,19 +64,32 @@ input {
 
 <div class="container">
 
+  <!-- FORMULARIO -->
   <div class="form-box">
-    <h2>Ruleta de Premios 🎁</h2>
+    <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
+
+    <p class="texto-secundario">
+      Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.
+    </p>
+
+    <p class="texto-secundario">
+      Completa tus datos para activar la Ruleta.
+    </p>
+
+    <p class="texto-suerte">¡Mucha suerte!</p>
 
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
 
+  <!-- RULETA -->
   <div class="ruleta-container">
 
     <div class="puntero"></div>
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <br><br>
+
     <button id="btnGirar" onclick="girar()" disabled>Girar</button>
 
     <h3 id="resultado"></h3>
@@ -103,7 +116,7 @@ const ctx = canvas.getContext("2d");
 let girando = false;
 let angulo = 0;
 
-// 🎨 DIBUJAR RULETA
+// 🎨 RULETA
 function dibujarRuleta() {
   const total = premios.length;
   const anguloSector = (2 * Math.PI) / total;
@@ -147,8 +160,15 @@ function girar(){
 
   let total = premios.length;
   let sectorGanador = Math.floor(Math.random() * total);
-  let tamanoSector = 360 / total;
+  let premio = premios[sectorGanador];
 
+  let nombre = nombreInput.value;
+  let apellido = apellidoInput.value;
+
+  // 🔥 IDENTIFICADOR ÚNICO (CLAVE ANTI DUPLICADOS)
+  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
+
+  let tamanoSector = 360 / total;
   let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
   let vueltas = 3 * 360;
   let destino = (vueltas + anguloFinal) * (Math.PI / 180);
@@ -176,13 +196,14 @@ function girar(){
     } else {
       girando = false;
 
-      let nombre = nombreInput.value;
-      let apellido = apellidoInput.value;
-      let premio = premios[sectorGanador];
-
       document.getElementById("resultado").innerText = "🎉 " + premio;
 
-      console.log("ENVIANDO:", { nombre, apellido, premio });
+      console.log("ENVIANDO:", {
+        nombre,
+        apellido,
+        premio,
+        identificador
+      });
 
       fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
         method: "POST",
@@ -192,7 +213,8 @@ function girar(){
         body: JSON.stringify({
           nombre: nombre,
           apellido: apellido,
-          premio: premio
+          premio: premio,
+          identificador: identificador
         })
       })
       .then(res => res.text())
