@@ -10,7 +10,6 @@ body {
   background: #f5f6fa;
 }
 
-/* CONTENEDOR PRINCIPAL */
 .container {
   display: flex;
   justify-content: center;
@@ -19,20 +18,17 @@ body {
   margin-top: 50px;
 }
 
-/* FORMULARIO */
 .form-box {
   text-align: left;
   max-width: 320px;
 }
 
-/* RULETA */
 .ruleta-container {
   position: relative;
   width: 400px;
   text-align: center;
 }
 
-/* FLECHA */
 .puntero {
   width: 0;
   height: 0;
@@ -42,7 +38,6 @@ body {
   margin: 0 auto 10px auto;
 }
 
-/* BOTÓN */
 button {
   padding: 12px 25px;
   background: #0984e3;
@@ -55,28 +50,12 @@ button {
 
 button:disabled {
   background: #b2bec3;
-  cursor: not-allowed;
-}
-
-button:hover:enabled {
-  background: #74b9ff;
 }
 
 input {
   padding: 10px;
   width: 200px;
   margin-bottom: 10px;
-}
-.texto-secundario {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 8px;
-}
-
-.texto-suerte {
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 15px;
 }
 </style>
 </head>
@@ -85,25 +64,19 @@ input {
 
 <div class="container">
 
-  <!-- FORMULARIO -->
   <div class="form-box">
-  <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
-  <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p>
-  <p class="texto-secundario">Completa tus datos a continuación para activar la Ruleta Global de Premios y participa.</p>
-  <p class="texto-suerte">¡Mucha suerte!</p>
+    <h2>Ruleta de Premios 🎁</h2>
+
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
 
-  <!-- RULETA -->
   <div class="ruleta-container">
 
     <div class="puntero"></div>
-
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <br><br>
-
     <button id="btnGirar" onclick="girar()" disabled>Girar</button>
 
     <h3 id="resultado"></h3>
@@ -127,8 +100,8 @@ const colores = ["#ff7675","#74b9ff","#55efc4","#ffeaa7","#a29bfe","#fd79a8"];
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-let angulo = 0;
 let girando = false;
+let angulo = 0;
 
 // 🎨 DIBUJAR RULETA
 function dibujarRuleta() {
@@ -146,16 +119,16 @@ function dibujarRuleta() {
     ctx.translate(200,200);
     ctx.rotate(i * anguloSector + anguloSector/2);
     ctx.fillStyle = "#000";
-    ctx.font = "bold 16px Arial";
-    ctx.fillText(premios[i], 60, 5);
-	ctx.textAlign = "center";
+    ctx.textAlign = "center";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(premios[i], 100, 0);
     ctx.restore();
   }
 }
 
 dibujarRuleta();
 
-// 🔓 ACTIVAR BOTÓN
+// 🔓 VALIDACIÓN
 const nombreInput = document.getElementById("nombre");
 const apellidoInput = document.getElementById("apellido");
 const btnGirar = document.getElementById("btnGirar");
@@ -173,12 +146,10 @@ function girar(){
   girando = true;
 
   let total = premios.length;
+  let sectorGanador = Math.floor(Math.random() * total);
   let tamanoSector = 360 / total;
 
-  let sectorGanador = Math.floor(Math.random() * total);
-
-  let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector / 2) - 90;
-
+  let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
   let vueltas = 3 * 360;
   let destino = (vueltas + anguloFinal) * (Math.PI / 180);
 
@@ -186,12 +157,9 @@ function girar(){
 
   function animar(timestamp){
     if(!inicio) inicio = timestamp;
+
     let progreso = timestamp - inicio;
-
-    let duracion = 2000;
-    let porcentaje = progreso / duracion;
-
-    if(porcentaje > 1) porcentaje = 1;
+    let porcentaje = Math.min(progreso / 2000, 1);
 
     angulo = destino * porcentaje;
 
@@ -207,29 +175,29 @@ function girar(){
       requestAnimationFrame(animar);
     } else {
       girando = false;
-      document.getElementById("resultado").innerText = "🎉 " + premios[sectorGanador];
-	  let nombre = document.getElementById("nombre").value;
-      let apellido = document.getElementById("apellido").value;
-	  
-	  // 👇 AGREGA ESTO
-		console.log("Datos enviados:", {
-		  nombre: nombre,
-		  apellido: apellido,
-		  premio: premios[sectorGanador]
-		});
 
-		fetch("https://eost1rzet7wnvsb.m.pipedream.net", {
-		  method: "POST",
-		  headers: {
-			"Content-Type": "application/json"
-		  },
-		  mode: "no-cors",
-		  body: JSON.stringify({
-			nombre: nombre,
-			apellido: apellido,
-			premio: premios[sectorGanador]
-		  })
-		});
+      let nombre = nombreInput.value;
+      let apellido = apellidoInput.value;
+      let premio = premios[sectorGanador];
+
+      document.getElementById("resultado").innerText = "🎉 " + premio;
+
+      console.log("ENVIANDO:", { nombre, apellido, premio });
+
+      fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          apellido: apellido,
+          premio: premio
+        })
+      })
+      .then(res => res.text())
+      .then(data => console.log("Power Automate OK:", data))
+      .catch(err => console.error("ERROR:", err));
     }
   }
 
