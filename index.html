@@ -21,7 +21,8 @@ body {
 
 /* FORMULARIO */
 .form-box {
-  text-align: center;
+  text-align: left;
+  max-width: 320px;
 }
 
 /* RULETA */
@@ -66,6 +67,17 @@ input {
   width: 200px;
   margin-bottom: 10px;
 }
+.texto-secundario {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.texto-suerte {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
 </style>
 </head>
 
@@ -76,9 +88,9 @@ input {
   <!-- FORMULARIO -->
   <div class="form-box">
   <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
-  <p>Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p>
-  <p> Completa tus datos a continuación para activar la Ruleta Global de Premios y participa.</p>
-  <p>¡Mucha suerte!</p>
+  <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p>
+  <p class="texto-secundario">Completa tus datos a continuación para activar la Ruleta Global de Premios y participa.</p>
+  <p class="texto-suerte">¡Mucha suerte!</p>
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
