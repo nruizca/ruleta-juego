@@ -120,16 +120,16 @@ input {
 // 🎁 PREMIOS
 const premios = [
   "Premio 5",
-  "Cupón",
+  "Cupón 1",
   "Premio 1",
-  "Cupón",
-  "Cupón",
+  "Cupón 2",
+  "Cupón 3",
   "Premio 3",
-  "Cupón",
+  "Cupón 4",
   "Premio 4",
-  "Cupón",
+  "Cupón 5",
   "Premio 6",
-  "Cupón"
+  "Cupón 6"
 ];
 
 /* 🎨 COLORES SUAVES CASINO
@@ -146,6 +146,22 @@ const colores = [
   "#F9C74F",
   "#43AA8B"
 ];*/
+
+const mensajesPremios = {
+  "Premio 5": "Salir 30 minutos antes del horario",
+  "Premio 1": "Acceso a beneficio especial",
+  "Premio 3": "Reconocimiento destacado",
+  "Premio 4": "Premio institucional",
+  "Premio 6": "Entrar 30 minutos antes del horario",
+
+  "Cupón 1": "Cupón de descuento disponible",
+  "Cupón 2": "Cupón canjeable en tienda",
+  "Cupón 3": "Cupón especial activo",
+  "Cupón 4": "Cupón promocional válido",
+  "Cupón 5": "Cupón de beneficio interno",
+  "Cupón 6": "Cupón sorpresa desbloqueado"
+};
+
 const colores = [
   "#0B1F3B", // azul noche profundo
   "#0F2A4A", // transición oscura suave
@@ -287,7 +303,11 @@ function girar(){
         origin: { y: 0.6 }
       });
 
-      document.getElementById("resultado").innerText = "🎉 " + premio;
+      //document.getElementById("resultado").innerText = "🎉 " + premio;
+	  let mensajeExtra = mensajesPremios[premio] || "";
+
+	document.getElementById("resultado").innerHTML =
+	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
 
       console.log("ENVIANDO:", {
         nombre,
