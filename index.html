@@ -148,18 +148,18 @@ const colores = [
 ];*/
 
 const mensajesPremios = {
-  "Premio 5": "Salir 30 minutos antes del horario",
-  "Premio 1": "Acceso a beneficio especial",
-  "Premio 3": "Reconocimiento destacado",
-  "Premio 4": "Premio institucional",
-  "Premio 6": "Entrar 30 minutos antes del horario",
+  "Premio 5": "Una Tarde libre.",
+  "Premio 1": "Entrar una (01) hora tarde el lunes",
+  "Premio 3": "Una (01) hora extra de almuerzo.",
+  "Premio 4": "Veinte (20) minutos de descanso en tu jornada",
+  "Premio 6": "Entrar una (01) hora tarde el viernes",
 
-  "Cupón 1": "Cupón de descuento disponible",
-  "Cupón 2": "Cupón canjeable en tienda",
-  "Cupón 3": "Cupón especial activo",
-  "Cupón 4": "Cupón promocional válido",
-  "Cupón 5": "Cupón de beneficio interno",
-  "Cupón 6": "Cupón sorpresa desbloqueado"
+  "Cupón 1": "30 minutos libres al final de la jornada",
+  "Cupón 2": "20 minutos libres al final de la jornada",
+  "Cupón 3": "30 minutos libres al final de la jornada",
+  "Cupón 4": "20 minutos libres al final de la jornada",
+  "Cupón 5": "30 minutos libres al final de la jornada",
+  "Cupón 6": "20 minutos libres al final de la jornada"
 };
 
 const colores = [
@@ -189,6 +189,35 @@ const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
+
+async function verificarUsuario(nombre, apellido) {
+
+  let identificador = (nombre + apellido)
+    .toLowerCase()
+    .replace(/\s/g, "");
+
+  try {
+    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        identificador,
+        check: true
+      })
+    });
+
+    const data = await res.json();
+    return data;
+
+  } catch (error) {
+    console.error("Error verificando usuario:", error);
+
+    return { status: "error" };
+	//return { status: "ok" }; // fallback seguro
+  }
+}
 
 // 🎨 DIBUJAR RULETA
 function dibujarRuleta() {
@@ -246,10 +275,30 @@ nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
 // 🎡 GIRAR
-function girar(){
+async function girar(){
 
   if(girando) return;
   girando = true;
+  
+// 🧠 TOMAR DATOS LIMPIOS
+const nombre = nombreInput.value.trim();
+const apellido = apellidoInput.value.trim();
+
+// 🧠 VALIDAR ANTES DE TODO
+let resp = await verificarUsuario(nombre, apellido);
+
+
+  // 🚫 SI YA PARTICIPÓ → NO MUESTRA NADA
+  if (resp.status === "bloqueado") {
+
+    alert("🚫 Ya participaste anteriormente");
+
+    btnGirar.disabled = true;
+    btnGirar.innerText = "Ya participaste";
+
+    girando = false;
+    return; // 🔥 IMPORTANTE: corta todo
+  }
 
   sonidoGiro.currentTime = 0;
   sonidoGiro.play();
@@ -258,8 +307,8 @@ function girar(){
   let sectorGanador = Math.floor(Math.random() * total);
   let premio = premios[sectorGanador];
 
-  let nombre = nombreInput.value;
-  let apellido = apellidoInput.value;
+  //let nombre = nombreInput.value;
+  //let apellido = apellidoInput.value;
 
   let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
 
@@ -333,9 +382,12 @@ function girar(){
 
         console.log("Respuesta Power Automate:", data);
 
-        if (data.status === "bloqueado") {
+       /* if (data.status === "bloqueado") {
           alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
-        }
+		  btnGirar.disabled = true;
+			btnGirar.innerText = "Ya participaste, este premio no aplica";
+			return;
+        }*/
 
       })
       .catch(err => console.error(err));
