@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Ruleta Profesional</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f5f6fa;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  margin-top: 50px;
+}
+
+/* FORMULARIO */
+.form-box {
+  text-align: center;
+}
+
+/* RULETA */
+.ruleta-container {
+  position: relative;
+  width: 400px;
+  text-align: center;
+}
+
+/* FLECHA */
+.puntero {
+  width: 0;
+  height: 0;
+  border-left: 22px solid transparent;
+  border-right: 22px solid transparent;
+  border-top: 35px solid #2d3436;
+  margin: 0 auto 10px auto;
+}
+
+/* BOTÓN */
+button {
+  padding: 12px 25px;
+  background: #0984e3;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button:disabled {
+  background: #b2bec3;
+  cursor: not-allowed;
+}
+
+button:hover:enabled {
+  background: #74b9ff;
+}
+
+input {
+  padding: 10px;
+  width: 200px;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- FORMULARIO -->
+  <div class="form-box">
+  <h2>🎁 Participa y gana</h2>
+    <input type="text" id="nombre" placeholder="Nombre"><br>
+    <input type="text" id="apellido" placeholder="Apellido"><br>
+  </div>
+
+  <!-- RULETA -->
+  <div class="ruleta-container">
+
+    <div class="puntero"></div>
+
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <br><br>
+
+    <button id="btnGirar" onclick="girar()" disabled>Girar</button>
+
+    <h3 id="resultado"></h3>
+
+  </div>
+
+</div>
+
+<script>
+const premios = [
+  "Giftcard",
+  "Descuento 10%",
+  "Premio sorpresa",
+  "Sigue intentando",
+  "Descuento 20%",
+  "Premio especial"
+];
+
+const colores = ["#ff7675","#74b9ff","#55efc4","#ffeaa7","#a29bfe","#fd79a8"];
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let angulo = 0;
+let girando = false;
+
+// 🎨 DIBUJAR RULETA
+function dibujarRuleta() {
+  const total = premios.length;
+  const anguloSector = (2 * Math.PI) / total;
+
+  for (let i = 0; i < total; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = colores[i];
+    ctx.moveTo(200,200);
+    ctx.arc(200,200,200,i*anguloSector,(i+1)*anguloSector);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(200,200);
+    ctx.rotate(i * anguloSector + anguloSector/2);
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 16px Arial";
+    ctx.fillText(premios[i], 60, 5);
+	ctx.textAlign = "center";
+    ctx.restore();
+  }
+}
+
+dibujarRuleta();
+
+// 🔓 ACTIVAR BOTÓN
+const nombreInput = document.getElementById("nombre");
+const apellidoInput = document.getElementById("apellido");
+const btnGirar = document.getElementById("btnGirar");
+
+function validarCampos() {
+  btnGirar.disabled = !(nombreInput.value.trim() && apellidoInput.value.trim());
+}
+
+nombreInput.addEventListener("input", validarCampos);
+apellidoInput.addEventListener("input", validarCampos);
+
+// 🎡 GIRAR
+function girar(){
+  if(girando) return;
+  girando = true;
+
+  let total = premios.length;
+  let tamanoSector = 360 / total;
+
+  let sectorGanador = Math.floor(Math.random() * total);
+
+  let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector / 2) - 90;
+
+  let vueltas = 3 * 360;
+  let destino = (vueltas + anguloFinal) * (Math.PI / 180);
+
+  let inicio = null;
+
+  function animar(timestamp){
+    if(!inicio) inicio = timestamp;
+    let progreso = timestamp - inicio;
+
+    let duracion = 2000;
+    let porcentaje = progreso / duracion;
+
+    if(porcentaje > 1) porcentaje = 1;
+
+    angulo = destino * porcentaje;
+
+    ctx.clearRect(0,0,400,400);
+    ctx.save();
+    ctx.translate(200,200);
+    ctx.rotate(angulo);
+    ctx.translate(-200,-200);
+    dibujarRuleta();
+    ctx.restore();
+
+    if(porcentaje < 1){
+      requestAnimationFrame(animar);
+    } else {
+      girando = false;
+      document.getElementById("resultado").innerText = "🎉 " + premios[sectorGanador];
+    }
+  }
+
+  requestAnimationFrame(animar);
+}
+</script>
+
+</body>
+</html>
