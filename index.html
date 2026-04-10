@@ -208,6 +208,20 @@ function girar(){
     } else {
       girando = false;
       document.getElementById("resultado").innerText = "🎉 " + premios[sectorGanador];
+	  let nombre = document.getElementById("nombre").value;
+let apellido = document.getElementById("apellido").value;
+
+fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    nombre: nombre,
+    apellido: apellido,
+    premio: premios[sectorGanador]
+  })
+});
     }
   }
 
