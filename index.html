@@ -27,15 +27,35 @@ body {
   position: relative;
   width: 400px;
   text-align: center;
+
+  /* ✨ GLASS EFFECT */
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
 .puntero {
   width: 0;
   height: 0;
-  border-left: 22px solid transparent;
-  border-right: 22px solid transparent;
-  border-top: 35px solid #2d3436;
   margin: 0 auto 10px auto;
+
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-top: 35px solid #c0c0c0;
+
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+
+  animation: bounceArrow 0.8s infinite alternate;
+}
+
+@keyframes bounceArrow {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-6px); }
 }
 
 button {
@@ -58,6 +78,10 @@ input {
   margin-bottom: 10px;
 }
 </style>
+
+<!-- 🎉 CONFETTI LIB -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
 </head>
 
 <body>
@@ -68,15 +92,8 @@ input {
   <div class="form-box">
     <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
 
-    <p class="texto-secundario">
-      Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.
-    </p>
-
-    <p class="texto-secundario">
-      Completa tus datos para activar la Ruleta.
-    </p>
-
-    <p class="texto-suerte">¡Mucha suerte!</p>
+    <p>Tu compromiso es el motor que nos mueve.</p>
+    <p>Completa tus datos para activar la Ruleta.</p>
 
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
@@ -99,39 +116,98 @@ input {
 </div>
 
 <script>
+
+// 🎁 PREMIOS
 const premios = [
-  "Giftcard",
-  "Descuento 10%",
-  "Premio sorpresa",
-  "Sigue intentando",
-  "Descuento 20%",
-  "Premio especial"
+  "Premio 5",
+  "Cupón",
+  "Premio 1",
+  "Cupón",
+  "Cupón",
+  "Premio 3",
+  "Cupón",
+  "Premio 4",
+  "Cupón",
+  "Premio 6",
+  "Cupón"
 ];
 
-const colores = ["#ff7675","#74b9ff","#55efc4","#ffeaa7","#a29bfe","#fd79a8"];
+/* 🎨 COLORES SUAVES CASINO
+const colores = [
+  "#FF6B6B",
+  "#6BCB77",
+  "#4D96FF",
+  "#FFD93D",
+  "#845EC2",
+  "#FF9671",
+  "#00C9A7",
+  "#C34A36",
+  "#6D597A",
+  "#F9C74F",
+  "#43AA8B"
+];*/
+const colores = [
+  "#0B1F3B", // azul noche profundo
+  "#0F2A4A", // transición oscura suave
+  "#134074", // azul marino elegante
 
+  "#1E40AF", // azul real fuerte (punto de impacto)
+  "#2563EB", // azul brillante corporativo
+  "#3B82F6", // azul vivo (máximo brillo)
+
+  "#38BDF8", // celeste brillante casino
+  "#0EA5E9", // azul luz neón
+  "#0284C7", // azul intenso medio
+
+  "#164E63", // azul petróleo elegante
+  "#0F172A"  // cierre oscuro profundo
+];
+
+// 🔊 SONIDOS
+const sonidoGiro = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b7a9f3c2.mp3?filename=slot-machine-bling-1-183983.mp3");
+const sonidoWin = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b8b0b5d3b.mp3?filename=win-fanfare-3-183979.mp3");
+
+// 🎨 CANVAS
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
 
-// 🎨 RULETA
+// 🎨 DIBUJAR RULETA
 function dibujarRuleta() {
   const total = premios.length;
+  const gradient = ctx.createRadialGradient(200, 200, 50, 200, 200, 200);
+gradient.addColorStop(0, "#1b2a4a");
+gradient.addColorStop(1, "#0b1f3b");
   const anguloSector = (2 * Math.PI) / total;
 
   for (let i = 0; i < total; i++) {
     ctx.beginPath();
+	  // 🎯 AQUÍ VA EL EFECTO
+	  ctx.shadowColor = "rgba(0,0,0,0.25)";
+	  ctx.shadowBlur = 6;
     ctx.fillStyle = colores[i];
+
+    ctx.shadowColor = "rgba(0,0,0,0.15)";
+    ctx.shadowBlur = 8;
+
     ctx.moveTo(200,200);
     ctx.arc(200,200,200,i*anguloSector,(i+1)*anguloSector);
     ctx.fill();
 
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
     ctx.save();
     ctx.translate(200,200);
     ctx.rotate(i * anguloSector + anguloSector/2);
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#ffffff";
+	ctx.shadowColor = "rgba(0,0,0,0.8)";
+	ctx.shadowBlur = 4;
     ctx.textAlign = "center";
     ctx.font = "bold 14px Arial";
     ctx.fillText(premios[i], 100, 0);
@@ -155,8 +231,12 @@ apellidoInput.addEventListener("input", validarCampos);
 
 // 🎡 GIRAR
 function girar(){
+
   if(girando) return;
   girando = true;
+
+  sonidoGiro.currentTime = 0;
+  sonidoGiro.play();
 
   let total = premios.length;
   let sectorGanador = Math.floor(Math.random() * total);
@@ -165,7 +245,6 @@ function girar(){
   let nombre = nombreInput.value;
   let apellido = apellidoInput.value;
 
-  // 🔥 IDENTIFICADOR ÚNICO (CLAVE ANTI DUPLICADOS)
   let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
 
   let tamanoSector = 360 / total;
@@ -176,6 +255,7 @@ function girar(){
   let inicio = null;
 
   function animar(timestamp){
+
     if(!inicio) inicio = timestamp;
 
     let progreso = timestamp - inicio;
@@ -194,7 +274,18 @@ function girar(){
     if(porcentaje < 1){
       requestAnimationFrame(animar);
     } else {
+
       girando = false;
+
+      sonidoGiro.pause();
+      sonidoWin.currentTime = 0;
+      sonidoWin.play();
+
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.6 }
+      });
 
       document.getElementById("resultado").innerText = "🎉 " + premio;
 
@@ -211,33 +302,29 @@ function girar(){
           "Content-Type": "application/json; charset=utf-8"
         },
         body: JSON.stringify({
-          nombre: nombre,
-          apellido: apellido,
-          premio: premio,
-          identificador: identificador
+          nombre,
+          apellido,
+          premio,
+          identificador
         })
       })
       .then(res => res.json())
-.then(data => {
+      .then(data => {
 
-  console.log("Respuesta Power Automate:", data);
+        console.log("Respuesta Power Automate:", data);
 
-  if (data.status === "bloqueado") {
-    alert("⚠️ Ya participaste en la ruleta");
-    return;
-  }
+        if (data.status === "bloqueado") {
+          alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
+        }
 
-  if (data.status === "ok") {
-    console.log("Guardado correctamente 🎉");
-  }
-
-})
-.catch(err => console.error("ERROR:", err));
+      })
+      .catch(err => console.error(err));
     }
   }
 
   requestAnimationFrame(animar);
 }
+
 </script>
 
 </body>
