@@ -217,9 +217,22 @@ function girar(){
           identificador: identificador
         })
       })
-      .then(res => res.text())
-      .then(data => console.log("Power Automate OK:", data))
-      .catch(err => console.error("ERROR:", err));
+      .then(res => res.json())
+.then(data => {
+
+  console.log("Respuesta Power Automate:", data);
+
+  if (data.status === "bloqueado") {
+    alert("⚠️ Ya participaste en la ruleta");
+    return;
+  }
+
+  if (data.status === "ok") {
+    console.log("Guardado correctamente 🎉");
+  }
+
+})
+.catch(err => console.error("ERROR:", err));
     }
   }
 
