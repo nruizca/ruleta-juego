@@ -75,6 +75,9 @@ input {
   <div class="form-box">
     <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
 
+    <p>Tu compromiso es el motor que nos mueve.</p>
+    <p>Completa tus datos para activar la Ruleta.</p>
+
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
@@ -96,10 +99,10 @@ input {
 
 const FLOW_URL = "https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U";
 
-// 🎁 PREMIOS
+// 馃巵 PREMIOS
 const premios = [
-  "Premio 5","Cupón 1","Premio 1","Cupón 2","Cupón 3",
-  "Premio 3","Cupón 4","Premio 4","Cupón 5","Premio 6","Cupón 6"
+  "Premio 5","Cup贸n 1","Premio 1","Cup贸n 2","Cup贸n 3",
+  "Premio 3","Cup贸n 4","Premio 4","Cup贸n 5","Premio 6","Cup贸n 6"
 ];
 
 const mensajesPremios = {
@@ -109,12 +112,12 @@ const mensajesPremios = {
   "Premio 4": "Veinte (20) minutos de descanso en tu jornada",
   "Premio 6": "Entrar una (01) hora tarde el viernes", 
  
-  "Cupón 1": "30 minutos libres al final de la jornada",
-  "Cupón 2": "20 minutos libres al final de la jornada",
-  "Cupón 3": "30 minutos libres al final de la jornada",
-  "Cupón 4": "20 minutos libres al final de la jornada",
-  "Cupón 5": "30 minutos libres al final de la jornada",
-  "Cupón 6": "20 minutos libres al final de la jornada"
+  "Cup贸n 1": "30 minutos libres al final de la jornada",
+  "Cup贸n 2": "20 minutos libres al final de la jornada",
+  "Cup贸n 3": "30 minutos libres al final de la jornada",
+  "Cup贸n 4": "20 minutos libres al final de la jornada",
+  "Cup贸n 5": "30 minutos libres al final de la jornada",
+  "Cup贸n 6": "20 minutos libres al final de la jornada"
 };
 
 const colores = ["#0B1F3B","#0F2A4A","#134074","#1E40AF","#2563EB","#3B82F6","#38BDF8","#0EA5E9","#0284C7","#164E63","#0F172A"];
@@ -125,7 +128,7 @@ const ctx = canvas.getContext("2d");
 let girando = false;
 let angulo = 0;
 
-// 🎨 DIBUJAR RULETA
+// 馃帹 DIBUJAR RULETA
 function dibujarRuleta() {
   const total = premios.length;
   const anguloSector = (2 * Math.PI) / total;
@@ -152,7 +155,7 @@ function dibujarRuleta() {
 }
 dibujarRuleta();
 
-// 🔓 VALIDACIÓN INPUT
+// 馃敁 VALIDACI脫N INPUT
 const nombreInput = document.getElementById("nombre");
 const apellidoInput = document.getElementById("apellido");
 const btnGirar = document.getElementById("btnGirar");
@@ -163,7 +166,7 @@ function validarCampos() {
 nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
-// 🎡 GIRAR CON VALIDACIÓN PREVIA
+// 馃帯 GIRAR CON VALIDACI脫N PREVIA
 async function girar(){
 
   if(girando) return;
@@ -172,7 +175,7 @@ async function girar(){
   let apellido = apellidoInput.value.trim();
   let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
 
-  // 🔍 VALIDAR ANTES
+  // 馃攳 VALIDAR ANTES
   try {
     const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
       method: "POST",
@@ -189,18 +192,18 @@ async function girar(){
     try { data = JSON.parse(text); } catch {}
 
     if (data.status === "bloqueado") {
-      alert("🚫 Ya participaste");
+      alert("馃毇 Ya participaste");
       btnGirar.disabled = true;
       btnGirar.innerText = "Ya participaste";
       return;
     }
 
   } catch (e) {
-    alert("Error validando participación");
+    alert("Error validando participaci贸n");
     return;
   }
 
-  // 🎯 GIRAR
+  // 馃幆 GIRAR
   girando = true;
 
   let total = premios.length;
@@ -241,9 +244,9 @@ async function girar(){
       let mensajeExtra = mensajesPremios[premio] || "";
 
       document.getElementById("resultado").innerHTML =
-        "🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
+        "馃帀 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
 
-      // 💾 GUARDAR RESULTADO
+      // 馃捑 GUARDAR RESULTADO
       fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
