@@ -28,20 +28,34 @@ body {
   width: 400px;
   text-align: center;
 
+  /* ✨ GLASS EFFECT */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 20px;
   padding: 20px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
 .puntero {
   width: 0;
   height: 0;
   margin: 0 auto 10px auto;
+
   border-left: 18px solid transparent;
   border-right: 18px solid transparent;
   border-top: 35px solid #c0c0c0;
+
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+
+  animation: bounceArrow 0.8s infinite alternate;
+}
+
+@keyframes bounceArrow {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-6px); }
 }
 
 button {
@@ -51,6 +65,7 @@ button {
   border: none;
   cursor: pointer;
   border-radius: 5px;
+  font-size: 16px;
 }
 
 button:disabled {
@@ -62,8 +77,12 @@ input {
   width: 200px;
   margin-bottom: 10px;
 }
+
+.texto-secundario { font-size: 14px; color: #555; margin-bottom: 8px; } 
+.texto-suerte { font-size: 13px; font-weight: bold; margin-bottom: 15px; }  
 </style>
 
+<!-- 🎉 CONFETTI LIB -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 </head>
@@ -72,17 +91,18 @@ input {
 
 <div class="container">
 
+  <!-- FORMULARIO -->
   <div class="form-box">
-    <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
-
-    <p>Tu compromiso es el motor que nos mueve.</p>
-    <p>Completa tus datos para activar la Ruleta.</p>
+<h2>¡En Veconinter celebramos tu esfuerzo!</h2> <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p> <p class="texto-secundario">Completa tus datos a continuación para activar la Ruleta Global de Premios y participa.</p> 
+<p class="texto-suerte">¡Mucha suerte!</p>
 
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
 
+  <!-- RULETA -->
   <div class="ruleta-container">
+
     <div class="puntero"></div>
     <canvas id="canvas" width="400" height="400"></canvas>
 
@@ -91,71 +111,158 @@ input {
     <button id="btnGirar" onclick="girar()" disabled>Girar</button>
 
     <h3 id="resultado"></h3>
+
   </div>
 
 </div>
 
 <script>
 
-const FLOW_URL = "https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U";
-
-// 馃巵 PREMIOS
+// 🎁 PREMIOS
 const premios = [
-  "Premio 5","Cup贸n 1","Premio 1","Cup贸n 2","Cup贸n 3",
-  "Premio 3","Cup贸n 4","Premio 4","Cup贸n 5","Premio 6","Cup贸n 6"
+  "Premio 5",
+  "Cupón 1",
+  "Premio 1",
+  "Cupón 2",
+  "Cupón 3",
+  "Premio 3",
+  "Cupón 4",
+  "Premio 4",
+  "Cupón 5",
+  "Premio 6",
+  "Cupón 6"
 ];
 
+/* 🎨 COLORES SUAVES CASINO
+const colores = [
+  "#FF6B6B",
+  "#6BCB77",
+  "#4D96FF",
+  "#FFD93D",
+  "#845EC2",
+  "#FF9671",
+  "#00C9A7",
+  "#C34A36",
+  "#6D597A",
+  "#F9C74F",
+  "#43AA8B"
+];*/
+
 const mensajesPremios = {
-  "Premio 5": "Una Tarde libre",
-  "Premio 1": "Entrar una (01) hora tarde el lunes",
-  "Premio 3": "Una (01) hora extra de almuerzo",
-  "Premio 4": "Veinte (20) minutos de descanso en tu jornada",
-  "Premio 6": "Entrar una (01) hora tarde el viernes", 
- 
-  "Cup贸n 1": "30 minutos libres al final de la jornada",
-  "Cup贸n 2": "20 minutos libres al final de la jornada",
-  "Cup贸n 3": "30 minutos libres al final de la jornada",
-  "Cup贸n 4": "20 minutos libres al final de la jornada",
-  "Cup贸n 5": "30 minutos libres al final de la jornada",
-  "Cup贸n 6": "20 minutos libres al final de la jornada"
+  "Premio 5": "Salir 30 minutos antes del horario",
+  "Premio 1": "Acceso a beneficio especial",
+  "Premio 3": "Reconocimiento destacado",
+  "Premio 4": "Premio institucional",
+  "Premio 6": "Entrar 30 minutos antes del horario",
+
+  "Cupón 1": "Cupón de descuento disponible",
+  "Cupón 2": "Cupón canjeable en tienda",
+  "Cupón 3": "Cupón especial activo",
+  "Cupón 4": "Cupón promocional válido",
+  "Cupón 5": "Cupón de beneficio interno",
+  "Cupón 6": "Cupón sorpresa desbloqueado"
 };
 
-const colores = ["#0B1F3B","#0F2A4A","#134074","#1E40AF","#2563EB","#3B82F6","#38BDF8","#0EA5E9","#0284C7","#164E63","#0F172A"];
+const colores = [
+  "#0B1F3B", // azul noche profundo
+  "#0F2A4A", // transición oscura suave
+  "#134074", // azul marino elegante
 
+  "#1E40AF", // azul real fuerte (punto de impacto)
+  "#2563EB", // azul brillante corporativo
+  "#3B82F6", // azul vivo (máximo brillo)
+
+  "#38BDF8", // celeste brillante casino
+  "#0EA5E9", // azul luz neón
+  "#0284C7", // azul intenso medio
+
+  "#164E63", // azul petróleo elegante
+  "#0F172A"  // cierre oscuro profundo
+];
+
+// 🔊 SONIDOS
+const sonidoGiro = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b7a9f3c2.mp3?filename=slot-machine-bling-1-183983.mp3");
+const sonidoWin = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b8b0b5d3b.mp3?filename=win-fanfare-3-183979.mp3");
+
+// 🎨 CANVAS
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
 
-// 馃帹 DIBUJAR RULETA
+async function verificarUsuario(nombre, apellido) {
+
+  let identificador = (nombre + apellido)
+    .toLowerCase()
+    .replace(/\s/g, "");
+
+  try {
+    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        identificador,
+        check: true
+      })
+    });
+
+    const data = await res.json();
+    return data;
+
+  } catch (error) {
+    console.error("Error verificando usuario:", error);
+
+    return { status: "ok" }; // fallback seguro
+  }
+}
+
+// 🎨 DIBUJAR RULETA
 function dibujarRuleta() {
   const total = premios.length;
+  const gradient = ctx.createRadialGradient(200, 200, 50, 200, 200, 200);
+gradient.addColorStop(0, "#1b2a4a");
+gradient.addColorStop(1, "#0b1f3b");
   const anguloSector = (2 * Math.PI) / total;
 
   for (let i = 0; i < total; i++) {
     ctx.beginPath();
+	  // 🎯 AQUÍ VA EL EFECTO
+	  ctx.shadowColor = "rgba(0,0,0,0.25)";
+	  ctx.shadowBlur = 6;
     ctx.fillStyle = colores[i];
+
+    ctx.shadowColor = "rgba(0,0,0,0.15)";
+    ctx.shadowBlur = 8;
+
     ctx.moveTo(200,200);
     ctx.arc(200,200,200,i*anguloSector,(i+1)*anguloSector);
     ctx.fill();
 
-    ctx.strokeStyle = "#fff";
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.save();
     ctx.translate(200,200);
     ctx.rotate(i * anguloSector + anguloSector/2);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#ffffff";
+	ctx.shadowColor = "rgba(0,0,0,0.8)";
+	ctx.shadowBlur = 4;
     ctx.textAlign = "center";
     ctx.font = "bold 14px Arial";
     ctx.fillText(premios[i], 100, 0);
     ctx.restore();
   }
 }
+
 dibujarRuleta();
 
-// 馃敁 VALIDACI脫N INPUT
+// 🔓 VALIDACIÓN
 const nombreInput = document.getElementById("nombre");
 const apellidoInput = document.getElementById("apellido");
 const btnGirar = document.getElementById("btnGirar");
@@ -163,56 +270,34 @@ const btnGirar = document.getElementById("btnGirar");
 function validarCampos() {
   btnGirar.disabled = !(nombreInput.value.trim() && apellidoInput.value.trim());
 }
+
 nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
-// 馃帯 GIRAR CON VALIDACI脫N PREVIA
+// 🎡 GIRAR
 async function girar(){
 
   if(girando) return;
-
-  let nombre = nombreInput.value.trim();
-  let apellido = apellidoInput.value.trim();
-  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
-
-  // 馃攳 VALIDAR ANTES
-  try {
-    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre,
-       apellido,
-       identificador,
-       validar: true })
-    });
-
-    const text = await res.text();
-    let data = {};
-
-    try { data = JSON.parse(text); } catch {}
-
-    if (data.status === "bloqueado") {
-      alert("馃毇 Ya participaste");
-      btnGirar.disabled = true;
-      btnGirar.innerText = "Ya participaste";
-      return;
-    }
-
-  } catch (e) {
-    alert("Error validando participaci贸n");
-    return;
-  }
-
-  // 馃幆 GIRAR
   girando = true;
+  
+  
+
+  sonidoGiro.currentTime = 0;
+  sonidoGiro.play();
 
   let total = premios.length;
   let sectorGanador = Math.floor(Math.random() * total);
   let premio = premios[sectorGanador];
 
+  let nombre = nombreInput.value;
+  let apellido = apellidoInput.value;
+
+  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
+
   let tamanoSector = 360 / total;
   let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
-  let destino = (3 * 360 + anguloFinal) * (Math.PI / 180);
+  let vueltas = 3 * 360;
+  let destino = (vueltas + anguloFinal) * (Math.PI / 180);
 
   let inicio = null;
 
@@ -239,25 +324,55 @@ async function girar(){
 
       girando = false;
 
-      confetti({ particleCount: 150, spread: 90 });
+      sonidoGiro.pause();
+      sonidoWin.currentTime = 0;
+      sonidoWin.play();
 
-      let mensajeExtra = mensajesPremios[premio] || "";
+      confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.6 }
+      });
 
-      document.getElementById("resultado").innerHTML =
-        "馃帀 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
+      //document.getElementById("resultado").innerText = "🎉 " + premio;
+	  let mensajeExtra = mensajesPremios[premio] || "";
 
-      // 馃捑 GUARDAR RESULTADO
+	document.getElementById("resultado").innerHTML =
+	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
+
+      console.log("ENVIANDO:", {
+        nombre,
+        apellido,
+        premio,
+        identificador
+      });
+
       fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        },
         body: JSON.stringify({
           nombre,
           apellido,
           premio,
           identificador
         })
-      });
+      })
+      .then(res => res.json())
+      .then(data => {
 
+        console.log("Respuesta Power Automate:", data);
+
+        if (data.status === "bloqueado") {
+          alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
+		  btnGirar.disabled = true;
+			btnGirar.innerText = "Ya participaste, este premio no aplica";
+			return;
+        }
+
+      })
+      .catch(err => console.error(err));
     }
   }
 
