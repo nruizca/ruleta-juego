@@ -28,34 +28,20 @@ body {
   width: 400px;
   text-align: center;
 
-  /* ✨ GLASS EFFECT */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-radius: 20px;
   padding: 20px;
-
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
 .puntero {
   width: 0;
   height: 0;
   margin: 0 auto 10px auto;
-
   border-left: 18px solid transparent;
   border-right: 18px solid transparent;
   border-top: 35px solid #c0c0c0;
-
-  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
-
-  animation: bounceArrow 0.8s infinite alternate;
-}
-
-@keyframes bounceArrow {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-6px); }
 }
 
 button {
@@ -65,7 +51,6 @@ button {
   border: none;
   cursor: pointer;
   border-radius: 5px;
-  font-size: 16px;
 }
 
 button:disabled {
@@ -79,7 +64,6 @@ input {
 }
 </style>
 
-<!-- 🎉 CONFETTI LIB -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 </head>
@@ -88,20 +72,14 @@ input {
 
 <div class="container">
 
-  <!-- FORMULARIO -->
   <div class="form-box">
     <h2>¡En Veconinter celebramos tu esfuerzo!</h2>
-
-    <p>Tu compromiso es el motor que nos mueve.</p>
-    <p>Completa tus datos para activar la Ruleta.</p>
 
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
 
-  <!-- RULETA -->
   <div class="ruleta-container">
-
     <div class="puntero"></div>
     <canvas id="canvas" width="400" height="400"></canvas>
 
@@ -110,159 +88,64 @@ input {
     <button id="btnGirar" onclick="girar()" disabled>Girar</button>
 
     <h3 id="resultado"></h3>
-
   </div>
 
 </div>
 
 <script>
 
+const FLOW_URL = "TU_URL_AQUI";
+
 // 🎁 PREMIOS
 const premios = [
-  "Premio 5",
-  "Cupón 1",
-  "Premio 1",
-  "Cupón 2",
-  "Cupón 3",
-  "Premio 3",
-  "Cupón 4",
-  "Premio 4",
-  "Cupón 5",
-  "Premio 6",
-  "Cupón 6"
+  "Premio 5","Cupón 1","Premio 1","Cupón 2","Cupón 3",
+  "Premio 3","Cupón 4","Premio 4","Cupón 5","Premio 6","Cupón 6"
 ];
-
-/* 🎨 COLORES SUAVES CASINO
-const colores = [
-  "#FF6B6B",
-  "#6BCB77",
-  "#4D96FF",
-  "#FFD93D",
-  "#845EC2",
-  "#FF9671",
-  "#00C9A7",
-  "#C34A36",
-  "#6D597A",
-  "#F9C74F",
-  "#43AA8B"
-];*/
 
 const mensajesPremios = {
-  "Premio 5": "Una Tarde libre.",
-  "Premio 1": "Entrar una (01) hora tarde el lunes",
-  "Premio 3": "Una (01) hora extra de almuerzo.",
-  "Premio 4": "Veinte (20) minutos de descanso en tu jornada",
-  "Premio 6": "Entrar una (01) hora tarde el viernes",
-
-  "Cupón 1": "30 minutos libres al final de la jornada",
-  "Cupón 2": "20 minutos libres al final de la jornada",
-  "Cupón 3": "30 minutos libres al final de la jornada",
-  "Cupón 4": "20 minutos libres al final de la jornada",
-  "Cupón 5": "30 minutos libres al final de la jornada",
-  "Cupón 6": "20 minutos libres al final de la jornada"
+  "Premio 5": "Salir 30 minutos antes del horario",
+  "Premio 1": "Acceso a beneficio especial",
+  "Premio 3": "Reconocimiento destacado",
+  "Premio 4": "Premio institucional",
+  "Premio 6": "Entrar 30 minutos antes del horario"
 };
 
-const colores = [
-  "#0B1F3B", // azul noche profundo
-  "#0F2A4A", // transición oscura suave
-  "#134074", // azul marino elegante
+const colores = ["#0B1F3B","#0F2A4A","#134074","#1E40AF","#2563EB","#3B82F6","#38BDF8","#0EA5E9","#0284C7","#164E63","#0F172A"];
 
-  "#1E40AF", // azul real fuerte (punto de impacto)
-  "#2563EB", // azul brillante corporativo
-  "#3B82F6", // azul vivo (máximo brillo)
-
-  "#38BDF8", // celeste brillante casino
-  "#0EA5E9", // azul luz neón
-  "#0284C7", // azul intenso medio
-
-  "#164E63", // azul petróleo elegante
-  "#0F172A"  // cierre oscuro profundo
-];
-
-// 🔊 SONIDOS
-const sonidoGiro = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b7a9f3c2.mp3?filename=slot-machine-bling-1-183983.mp3");
-const sonidoWin = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b8b0b5d3b.mp3?filename=win-fanfare-3-183979.mp3");
-
-// 🎨 CANVAS
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
 
-async function verificarUsuario(nombre, apellido) {
-
-  let identificador = (nombre + apellido)
-    .toLowerCase()
-    .replace(/\s/g, "");
-
-  try {
-    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        identificador,
-        check: true
-      })
-    });
-
-    const data = await res.json();
-    return data;
-
-  } catch (error) {
-    console.error("Error verificando usuario:", error);
-
-    return { status: "error" };
-	//return { status: "ok" }; // fallback seguro
-  }
-}
-
 // 🎨 DIBUJAR RULETA
 function dibujarRuleta() {
   const total = premios.length;
-  const gradient = ctx.createRadialGradient(200, 200, 50, 200, 200, 200);
-gradient.addColorStop(0, "#1b2a4a");
-gradient.addColorStop(1, "#0b1f3b");
   const anguloSector = (2 * Math.PI) / total;
 
   for (let i = 0; i < total; i++) {
     ctx.beginPath();
-	  // 🎯 AQUÍ VA EL EFECTO
-	  ctx.shadowColor = "rgba(0,0,0,0.25)";
-	  ctx.shadowBlur = 6;
     ctx.fillStyle = colores[i];
-
-    ctx.shadowColor = "rgba(0,0,0,0.15)";
-    ctx.shadowBlur = 8;
-
     ctx.moveTo(200,200);
     ctx.arc(200,200,200,i*anguloSector,(i+1)*anguloSector);
     ctx.fill();
 
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff";
     ctx.stroke();
 
     ctx.save();
     ctx.translate(200,200);
     ctx.rotate(i * anguloSector + anguloSector/2);
-    ctx.fillStyle = "#ffffff";
-	ctx.shadowColor = "rgba(0,0,0,0.8)";
-	ctx.shadowBlur = 4;
+    ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.font = "bold 14px Arial";
     ctx.fillText(premios[i], 100, 0);
     ctx.restore();
   }
 }
-
 dibujarRuleta();
 
-// 🔓 VALIDACIÓN
+// 🔓 VALIDACIÓN INPUT
 const nombreInput = document.getElementById("nombre");
 const apellidoInput = document.getElementById("apellido");
 const btnGirar = document.getElementById("btnGirar");
@@ -270,52 +153,56 @@ const btnGirar = document.getElementById("btnGirar");
 function validarCampos() {
   btnGirar.disabled = !(nombreInput.value.trim() && apellidoInput.value.trim());
 }
-
 nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
-// 🎡 GIRAR
+// 🎡 GIRAR CON VALIDACIÓN PREVIA
 async function girar(){
 
   if(girando) return;
-  girando = true;
-  
-// 🧠 TOMAR DATOS LIMPIOS
-const nombre = nombreInput.value.trim();
-const apellido = apellidoInput.value.trim();
 
-// 🧠 VALIDAR ANTES DE TODO
-let resp = await verificarUsuario(nombre, apellido);
+  let nombre = nombreInput.value.trim();
+  let apellido = apellidoInput.value.trim();
+  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
 
+  // 🔍 VALIDAR ANTES
+  try {
+    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre,
+       apellido,
+       identificador,
+       validar: true })
+    });
 
-  // 🚫 SI YA PARTICIPÓ → NO MUESTRA NADA
-  if (resp.status === "bloqueado") {
+    const text = await res.text();
+    let data = {};
 
-    alert("🚫 Ya participaste anteriormente");
+    try { data = JSON.parse(text); } catch {}
 
-    btnGirar.disabled = true;
-    btnGirar.innerText = "Ya participaste";
+    if (data.status === "bloqueado") {
+      alert("🚫 Ya participaste");
+      btnGirar.disabled = true;
+      btnGirar.innerText = "Ya participaste";
+      return;
+    }
 
-    girando = false;
-    return; // 🔥 IMPORTANTE: corta todo
+  } catch (e) {
+    alert("Error validando participación");
+    return;
   }
 
-  sonidoGiro.currentTime = 0;
-  sonidoGiro.play();
+  // 🎯 GIRAR
+  girando = true;
 
   let total = premios.length;
   let sectorGanador = Math.floor(Math.random() * total);
   let premio = premios[sectorGanador];
 
-  //let nombre = nombreInput.value;
-  //let apellido = apellidoInput.value;
-
-  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
-
   let tamanoSector = 360 / total;
   let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
-  let vueltas = 3 * 360;
-  let destino = (vueltas + anguloFinal) * (Math.PI / 180);
+  let destino = (3 * 360 + anguloFinal) * (Math.PI / 180);
 
   let inicio = null;
 
@@ -342,55 +229,25 @@ let resp = await verificarUsuario(nombre, apellido);
 
       girando = false;
 
-      sonidoGiro.pause();
-      sonidoWin.currentTime = 0;
-      sonidoWin.play();
+      confetti({ particleCount: 150, spread: 90 });
 
-      confetti({
-        particleCount: 150,
-        spread: 90,
-        origin: { y: 0.6 }
-      });
+      let mensajeExtra = mensajesPremios[premio] || "";
 
-      //document.getElementById("resultado").innerText = "🎉 " + premio;
-	  let mensajeExtra = mensajesPremios[premio] || "";
+      document.getElementById("resultado").innerHTML =
+        "🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
 
-	document.getElementById("resultado").innerHTML =
-	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
-
-      console.log("ENVIANDO:", {
-        nombre,
-        apellido,
-        premio,
-        identificador
-      });
-
+      // 💾 GUARDAR RESULTADO
       fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre,
           apellido,
           premio,
           identificador
         })
-      })
-      .then(res => res.json())
-      .then(data => {
+      });
 
-        console.log("Respuesta Power Automate:", data);
-
-       /* if (data.status === "bloqueado") {
-          alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
-		  btnGirar.disabled = true;
-			btnGirar.innerText = "Ya participaste, este premio no aplica";
-			return;
-        }*/
-
-      })
-      .catch(err => console.error(err));
     }
   }
 
