@@ -266,7 +266,7 @@ async function girar(){
 
   // 🚫 PREMIO AGOTADO
   if (data.status === "agotado") {
-    document.getElementById("resultado").innerHTML = "🔄 Buscando otro premio disponible...";
+    document.getElementById("resultado").innerHTML = "Buscando otro premio disponible...";
     
     setTimeout(() => girar(), 800);
     return;
