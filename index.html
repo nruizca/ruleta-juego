@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>Ruleta Profesional</title>
 
@@ -28,7 +29,7 @@ body {
   width: 400px;
   text-align: center;
 
-  /* ✨ GLASS EFFECT */
+  /* ? GLASS EFFECT */
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
@@ -43,19 +44,9 @@ body {
   width: 0;
   height: 0;
   margin: 0 auto 10px auto;
-
   border-left: 18px solid transparent;
   border-right: 18px solid transparent;
   border-top: 35px solid #c0c0c0;
-
-  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
-
-  animation: bounceArrow 0.8s infinite alternate;
-}
-
-@keyframes bounceArrow {
-  from { transform: translateY(0px); }
-  to { transform: translateY(-6px); }
 }
 
 button {
@@ -65,7 +56,6 @@ button {
   border: none;
   cursor: pointer;
   border-radius: 5px;
-  font-size: 16px;
 }
 
 button:disabled {
@@ -77,32 +67,25 @@ input {
   width: 200px;
   margin-bottom: 10px;
 }
-
-.texto-secundario { font-size: 14px; color: #555; margin-bottom: 8px; } 
-.texto-suerte { font-size: 13px; font-weight: bold; margin-bottom: 15px; }  
 </style>
 
-<!-- 🎉 CONFETTI LIB -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 </head>
 
 <body>
-
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <div class="container">
 
-  <!-- FORMULARIO -->
   <div class="form-box">
-<h2>¡En Veconinter celebramos tu esfuerzo!</h2> <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p> <p class="texto-secundario">Completa tus datos a continuación para activar la Ruleta Global de Premios y participa.</p> 
-<p class="texto-suerte">¡Mucha suerte!</p>
+<h2>&iexcl;En Veconinter celebramos tu esfuerzo!</h2> <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p> <p class="texto-secundario">Completa tus datos a continuaci&oacute;n para activar la Ruleta Global de Premios y participa.</p> 
+<p class="texto-suerte">&iexcl;Mucha suerte!</p>
 
     <input type="text" id="nombre" placeholder="Nombre"><br>
     <input type="text" id="apellido" placeholder="Apellido"><br>
   </div>
 
-  <!-- RULETA -->
   <div class="ruleta-container">
-
     <div class="puntero"></div>
     <canvas id="canvas" width="400" height="400"></canvas>
 
@@ -111,147 +94,65 @@ input {
     <button id="btnGirar" onclick="girar()" disabled>Girar</button>
 
     <h3 id="resultado"></h3>
-
   </div>
 
 </div>
 
 <script>
 
-// 🎁 PREMIOS
-const premios = [
-  "Premio 5",
-  "Premio 1",
-  "Premio 2",
-  "Premio 3"
-  "Premio 4"
-  "Premio 6"
-];
+const FLOW_URL = "https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U";
 
-/* 🎨 COLORES SUAVES CASINO
-const colores = [
-  "#FF6B6B",
-  "#6BCB77",
-  "#4D96FF",
-  "#FFD93D",
-  "#845EC2",
-  "#FF9671",
-  "#00C9A7",
-  "#C34A36",
-  "#6D597A",
-  "#F9C74F",
-  "#43AA8B"
-];*/
+// PREMIOS
+const premios = [
+  "Premio 5","Premio 1","Premio 2",
+  "Premio 3","Premio 4","Premio 6"
+];
 
 const mensajesPremios = {
-  "Premio 5": "El equipo de GH te contactara",
-  "Premio 1": "El equipo de GH te contactara",
-  "Premio 2": "El equipo de GH te contactara",	
-  "Premio 3": "El equipo de GH te contactara",
-  "Premio 4": "El equipo de GH te contactara",
-  "Premio 6": "El equipo de GH te contactara"
+  "Premio 5": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio",
+  "Premio 1": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio",
+  "Premio 2": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio",
+  "Premio 3": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio",
+  "Premio 4": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio",
+  "Premio 6": "El equipo de GH te contactar&aacute; para coordinar la entrega de tu premio"
 };
 
-const colores = [
-  "#0B1F3B", // azul noche profundo
-  "#0F2A4A", // transición oscura suave
-  "#134074", // azul marino elegante
+const colores = ["#0B1F3B","#0F2A4A","#134074","#1E40AF","#2563EB","#3B82F6","#38BDF8","#0EA5E9","#0284C7","#164E63","#0F172A"];
 
-  "#1E40AF", // azul real fuerte (punto de impacto)
-  "#2563EB", // azul brillante corporativo
-  "#3B82F6", // azul vivo (máximo brillo)
-
-  "#38BDF8", // celeste brillante casino
-  "#0EA5E9", // azul luz neón
-  "#0284C7", // azul intenso medio
-
-  "#164E63", // azul petróleo elegante
-  "#0F172A"  // cierre oscuro profundo
-];
-
-// 🔊 SONIDOS
-const sonidoGiro = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b7a9f3c2.mp3?filename=slot-machine-bling-1-183983.mp3");
-const sonidoWin = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_4b8b0b5d3b.mp3?filename=win-fanfare-3-183979.mp3");
-
-// 🎨 CANVAS
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
 
-async function verificarUsuario(nombre, apellido) {
-
-  let identificador = (nombre + apellido)
-    .toLowerCase()
-    .replace(/\s/g, "");
-
-  try {
-    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        identificador,
-        check: true
-      })
-    });
-
-    const data = await res.json();
-    return data;
-
-  } catch (error) {
-    console.error("Error verificando usuario:", error);
-
-    return { status: "ok" }; // fallback seguro
-  }
-}
-
-// 🎨 DIBUJAR RULETA
+// DIBUJAR RULETA
 function dibujarRuleta() {
   const total = premios.length;
-  const gradient = ctx.createRadialGradient(200, 200, 50, 200, 200, 200);
-gradient.addColorStop(0, "#1b2a4a");
-gradient.addColorStop(1, "#0b1f3b");
   const anguloSector = (2 * Math.PI) / total;
 
   for (let i = 0; i < total; i++) {
     ctx.beginPath();
-	  // 🎯 AQUÍ VA EL EFECTO
-	  ctx.shadowColor = "rgba(0,0,0,0.25)";
-	  ctx.shadowBlur = 6;
     ctx.fillStyle = colores[i];
-
-    ctx.shadowColor = "rgba(0,0,0,0.15)";
-    ctx.shadowBlur = 8;
-
     ctx.moveTo(200,200);
     ctx.arc(200,200,200,i*anguloSector,(i+1)*anguloSector);
     ctx.fill();
 
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff";
     ctx.stroke();
 
     ctx.save();
     ctx.translate(200,200);
     ctx.rotate(i * anguloSector + anguloSector/2);
-    ctx.fillStyle = "#ffffff";
-	ctx.shadowColor = "rgba(0,0,0,0.8)";
-	ctx.shadowBlur = 4;
+    ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.font = "bold 14px Arial";
     ctx.fillText(premios[i], 100, 0);
     ctx.restore();
   }
 }
-
 dibujarRuleta();
 
-// 🔓 VALIDACIÓN
+// VALIDACION INPUT
 const nombreInput = document.getElementById("nombre");
 const apellidoInput = document.getElementById("apellido");
 const btnGirar = document.getElementById("btnGirar");
@@ -259,34 +160,56 @@ const btnGirar = document.getElementById("btnGirar");
 function validarCampos() {
   btnGirar.disabled = !(nombreInput.value.trim() && apellidoInput.value.trim());
 }
-
 nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
-// 🎡 GIRAR
+// GIRAR CON VALIDACION PREVIA
 async function girar(){
 
   if(girando) return;
-  girando = true;
-  
-  
 
-  sonidoGiro.currentTime = 0;
-  sonidoGiro.play();
+  let nombre = nombreInput.value.trim();
+  let apellido = apellidoInput.value.trim();
+  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
+
+  // VALIDAR ANTES
+  try {
+    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre,
+       apellido,
+       identificador,
+       validar: true })
+    });
+
+    const text = await res.text();
+    let data = {};
+
+    try { data = JSON.parse(text); } catch {}
+
+    if (data.status === "bloqueado") {
+      alert("Ya participaste");
+      btnGirar.disabled = true;
+      btnGirar.innerText = "Ya participaste";
+      return;
+    }
+
+  } catch (e) {
+    alert("Error validando participación");
+    return;
+  }
+
+  // GIRAR
+  girando = true;
 
   let total = premios.length;
   let sectorGanador = Math.floor(Math.random() * total);
   let premio = premios[sectorGanador];
 
-  let nombre = nombreInput.value;
-  let apellido = apellidoInput.value;
-
-  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
-
   let tamanoSector = 360 / total;
   let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
-  let vueltas = 3 * 360;
-  let destino = (vueltas + anguloFinal) * (Math.PI / 180);
+  let destino = (3 * 360 + anguloFinal) * (Math.PI / 180);
 
   let inicio = null;
 
@@ -313,76 +236,26 @@ async function girar(){
 
       girando = false;
 
-      sonidoGiro.pause();
-      sonidoWin.currentTime = 0;
-      sonidoWin.play();
+      confetti({ particleCount: 150, spread: 90 });
 
-      confetti({
-        particleCount: 150,
-        spread: 90,
-        origin: { y: 0.6 }
-      });
+      //document.getElementById("resultado").innerText = "?? " + premio;
+	  let mensajeExtra = mensajesPremios[premio] || "Sin mensaje asignado";
 
-      //document.getElementById("resultado").innerText = "🎉 " + premio;
-	  let mensajeExtra = mensajesPremios[premio] || "";
+	document.getElementById("resultado").innerHTML =
+"<b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
 
-	/*document.getElementById("resultado").innerHTML =
-	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";*/
-		document.getElementById("resultado").innerHTML = "⏳ Validando premio...";
-
-      console.log("ENVIANDO:", {
-        nombre,
-        apellido,
-        premio,
-        identificador
-      });
-
+      // GUARDAR RESULTADO
       fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre,
           apellido,
           premio,
           identificador
         })
-      })
-      .then(res => res.json())
-      .then(data => {
+      });
 
-        console.log("Respuesta Power Automate:", data);
-		  
-        // 🚫 USUARIO YA PARTICIPÓ
-        if (data.status === "bloqueado") {
-          alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
-		  btnGirar.disabled = true;
-			btnGirar.innerText = "Ya participaste, este premio no aplica";
-			document.getElementById("resultado").innerHTML = "";
-
-            girando = false;
-			return;
-        }
-
-	// ⚠️ PREMIO AGOTADO
-      if (data.status === "agotado") {
-     // alert("⚠️ Este premio ya se agotó, girando nuevamente...");
-      document.getElementById("resultado").innerHTML = "🔄 Buscando otro premio disponible...";
-
-    girando = false;
-      // 🔁 vuelve a intentar automáticamente
-      setTimeout(() => girar(), 800);
-
-    return;
-  }
-		// ✅ PREMIO VÁLIDO
-  let mensajeExtra = mensajesPremios[premio] || "";
-
-  document.getElementById("resultado").innerHTML =
-    "🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";  
-      })
-      .catch(err => console.error(err));
     }
   }
 
