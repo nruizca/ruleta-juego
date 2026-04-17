@@ -337,8 +337,9 @@ async function girar(){
       //document.getElementById("resultado").innerText = "🎉 " + premio;
 	  let mensajeExtra = mensajesPremios[premio] || "";
 
-	document.getElementById("resultado").innerHTML =
-	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
+	/*document.getElementById("resultado").innerHTML =
+	"🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";*/
+		document.getElementById("resultado").innerHTML = "⏳ Validando premio...";
 
       console.log("ENVIANDO:", {
         nombre,
@@ -363,14 +364,34 @@ async function girar(){
       .then(data => {
 
         console.log("Respuesta Power Automate:", data);
-
+		  
+        // 🚫 USUARIO YA PARTICIPÓ
         if (data.status === "bloqueado") {
           alert("🚫 Intento duplicado detectado. Ya completaste tu participación en la ruleta 🎯");
 		  btnGirar.disabled = true;
 			btnGirar.innerText = "Ya participaste, este premio no aplica";
+			document.getElementById("resultado").innerHTML = "";
+
+            girando = false;
 			return;
         }
 
+	// ⚠️ PREMIO AGOTADO
+      if (data.status === "agotado") {
+     // alert("⚠️ Este premio ya se agotó, girando nuevamente...");
+      document.getElementById("resultado").innerHTML = "🔄 Buscando otro premio disponible...";
+
+    girando = false;
+      // 🔁 vuelve a intentar automáticamente
+      setTimeout(() => girar(), 800);
+
+    return;
+  }
+		// ✅ PREMIO VÁLIDO
+  let mensajeExtra = mensajesPremios[premio] || "";
+
+  document.getElementById("resultado").innerHTML =
+    "🎉 <b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";  
       })
       .catch(err => console.error(err));
     }
