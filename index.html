@@ -177,16 +177,18 @@ async function girar(){
     const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre,
+      body: JSON.stringify({ 
+	   nombre,
        apellido,
        identificador,
+	   premio: null,
        validar: true })
     });
 
-    const text = await res.text();
+    /*const text = await res.text();
     let data = {};
-
-    try { data = JSON.parse(text); } catch {}
+    try { data = JSON.parse(text); } catch {}*/
+	const data = await res.json();
 
     if (data.status === "bloqueado") {
       alert("Ya participaste");
@@ -196,8 +198,9 @@ async function girar(){
     }
 
   } catch (e) {
-    alert("Error validando participación");
-    return;
+  console.error(e);
+  alert("Error validando participación");
+  return;
   }
 
   // GIRAR
@@ -252,9 +255,39 @@ async function girar(){
           nombre,
           apellido,
           premio,
-          identificador
+          identificador,
+          validar: false
         })
-      });
+      })
+	  .then(res => res.json())
+.then(data => {
+
+  console.log("Respuesta flujo:", data);
+
+  // 🚫 PREMIO AGOTADO
+  if (data.status === "agotado") {
+    document.getElementById("resultado").innerHTML = "🔄 Buscando otro premio disponible...";
+    
+    setTimeout(() => girar(), 800);
+    return;
+  }
+
+  // 🚫 USUARIO BLOQUEADO (doble seguridad)
+  if (data.status === "bloqueado") {
+    alert("Ya participaste");
+    btnGirar.disabled = true;
+    return;
+  }
+
+  // ✅ PREMIO OK
+  let mensajeExtra = mensajesPremios[premio] || "";
+
+  /*document.getElementById("resultado").innerHTML =
+    "<b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";*/
+
+})
+.catch(err => console.error(err))
+	  ;
 
     }
   }
