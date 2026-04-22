@@ -245,7 +245,7 @@ let destino = calcularDestino(sectorGanador);
     if(!inicio) inicio = timestamp;
 
     let progreso = timestamp - inicio;
-    let porcentaje = Math.min(progreso / 2000, 1);
+    let porcentaje = Math.min(progreso / 1500, 1);
 
     angulo = destino * porcentaje;
 
