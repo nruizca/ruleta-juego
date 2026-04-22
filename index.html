@@ -124,6 +124,7 @@ const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
+let intentos = 0; // ✅ AQUÍ (global)
 
 // DIBUJAR RULETA
 function dibujarRuleta() {
@@ -163,6 +164,19 @@ function validarCampos() {
 nombreInput.addEventListener("input", validarCampos);
 apellidoInput.addEventListener("input", validarCampos);
 
+function calcularDestino(sectorIndex) {
+  let total = premios.length;
+  let tamanoSector = 360 / total;
+
+  let anguloBase = sectorIndex * tamanoSector;
+  let centroSector = anguloBase + (tamanoSector / 2);
+
+  // Ajuste por puntero arriba
+  let anguloFinal = 360 - centroSector - 90;
+
+  return (3 * 360 + anguloFinal) * (Math.PI / 180);
+}
+
 // GIRAR CON VALIDACION PREVIA
 async function girar(){
 
@@ -191,11 +205,21 @@ async function girar(){
 	const data = await res.json();
 
     if (data.status === "bloqueado") {
-      alert("Ya participaste");
-      btnGirar.disabled = true;
-      btnGirar.innerText = "Ya participaste";
-      return;
-    }
+  alert("Ya participaste");
+  btnGirar.disabled = true;
+  btnGirar.innerText = "Ya participaste";
+  return;
+}
+
+// 🚫 NUEVO: TODOS LOS PREMIOS EN 0
+if (data.status === "sin_premios") {
+  document.getElementById("resultado").innerHTML =
+    "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
+
+  btnGirar.disabled = true;
+  btnGirar.innerText = "Ruleta finalizada";
+  return;
+}
 
   } catch (e) {
   console.error(e);
@@ -204,15 +228,15 @@ async function girar(){
   }
 
   // GIRAR
+  intentos = 0; // ✅ reset correcto (solo una vez)
   girando = true;
 
-  let total = premios.length;
-  let sectorGanador = Math.floor(Math.random() * total);
-  let premio = premios[sectorGanador];
+let total = premios.length;
+let sectorGanador = Math.floor(Math.random() * total);
+let premio = premios[sectorGanador];
 
-  let tamanoSector = 360 / total;
-  let anguloFinal = 360 - (sectorGanador * tamanoSector) - (tamanoSector/2) - 90;
-  let destino = (3 * 360 + anguloFinal) * (Math.PI / 180);
+// ✅ USAR FUNCIÓN CENTRALIZADA
+let destino = calcularDestino(sectorGanador);
 
   let inicio = null;
 
@@ -264,22 +288,121 @@ async function girar(){
 
   console.log("Respuesta flujo:", data);
 
-  // 🚫 PREMIO AGOTADO
-  if (data.status === "agotado") {
-    document.getElementById("resultado").innerHTML = "Buscando otro premio disponible...";
-    
-    setTimeout(() => girar(), 800);
+// 🚫 NUEVO: TODOS LOS PREMIOS EN 0 (MUY IMPORTANTE)
+if (data.status === "sin_premios") {
+  document.getElementById("resultado").innerHTML =
+    "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
+
+  btnGirar.disabled = true;
+  btnGirar.innerText = "Ruleta finalizada";
+  return;
+}
+
+  // ?? PREMIO AGOTADO
+if (data.status === "agotado") {
+
+  intentos++;
+
+  console.log("Intento:", intentos);
+
+  if (intentos >= 5) {
+    document.getElementById("resultado").innerHTML =
+      "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
+
+    btnGirar.disabled = true;
+    btnGirar.innerText = "Ruleta finalizada";
     return;
   }
 
-  // 🚫 USUARIO BLOQUEADO (doble seguridad)
+  document.getElementById("resultado").innerHTML =
+    "Premio agotado, Buscando otro premio disponible...";
+
+  // 🔥 REINTENTO CONTROLADO (SIN volver a validar usuario)
+  setTimeout(() => {
+
+    let total = premios.length;
+    let nuevoSector = Math.floor(Math.random() * total);
+    let nuevoPremio = premios[nuevoSector];
+
+    fetch(FLOW_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre,
+        apellido,
+        premio: nuevoPremio,
+        identificador,
+        validar: false
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+      if (data.status === "sin_premios") {
+        document.getElementById("resultado").innerHTML =
+          "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
+
+        btnGirar.disabled = true;
+        btnGirar.innerText = "Ruleta finalizada";
+        return;
+      }
+
+      if (data.status === "agotado") {
+        // 🔁 vuelve a entrar aquí sin reiniciar intentos
+        return girar(); // ahora sí controlado
+      }
+
+      // ✅ premio válido
+let mensajeExtra = mensajesPremios[nuevoPremio] || "";
+
+// 🔥 CALCULAR GIRO CORRECTO
+let nuevoDestino = calcularDestino(nuevoSector);
+
+// 🔥 ANIMAR NUEVAMENTE LA RULETA
+let inicio2 = null;
+
+function animarNuevo(timestamp) {
+
+  if (!inicio2) inicio2 = timestamp;
+
+  let progreso = timestamp - inicio2;
+  let porcentaje = Math.min(progreso / 1500, 1);
+
+  angulo = nuevoDestino * porcentaje;
+
+  ctx.clearRect(0,0,400,400);
+  ctx.save();
+  ctx.translate(200,200);
+  ctx.rotate(angulo);
+  ctx.translate(-200,-200);
+  dibujarRuleta();
+  ctx.restore();
+
+  if (porcentaje < 1) {
+    requestAnimationFrame(animarNuevo);
+  } else {
+    document.getElementById("resultado").innerHTML =
+      "<b>" + nuevoPremio + "</b><br><small>" + mensajeExtra + "</small>";
+  }
+}
+
+requestAnimationFrame(animarNuevo);
+
+    });
+
+  }, 800);
+
+  return;
+}
+
+  // ?? USUARIO BLOQUEADO (doble seguridad)
   if (data.status === "bloqueado") {
     alert("Ya participaste");
     btnGirar.disabled = true;
     return;
   }
 
-  // ✅ PREMIO OK
+  // ? PREMIO OK
   let mensajeExtra = mensajesPremios[premio] || "";
 
   /*document.getElementById("resultado").innerHTML =
