@@ -81,8 +81,7 @@ input {
 <h2>&iexcl;En Veconinter celebramos tu esfuerzo!</h2> <p class="texto-secundario">Tu compromiso es el motor que nos mueve, y hoy queremos premiarlo.</p> <p class="texto-secundario">Completa tus datos a continuaci&oacute;n para activar la Ruleta Global de Premios y participa.</p> 
 <p class="texto-suerte">&iexcl;Mucha suerte!</p>
 
-    <input type="text" id="nombre" placeholder="Nombre"><br>
-    <input type="text" id="apellido" placeholder="Apellido"><br>
+    <input type="email" id="correo" placeholder="correo@veconinter.com"><br>
   </div>
 
   <div class="ruleta-container">
@@ -100,7 +99,7 @@ input {
 
 <script>
 
-const FLOW_URL = "https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U";
+const FLOW_URL = "https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/088fa85180d547c99c22d5f8358be79a/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=4ArVIE-vzPZBDUTsEFZQ6-ZwIZHKIm7CWKvjNY2AtVo";
 
 // PREMIOS
 const premios = [
@@ -124,7 +123,8 @@ const ctx = canvas.getContext("2d");
 
 let girando = false;
 let angulo = 0;
-let intentos = 0; // ✅ AQUÍ (global)
+let intentos = 0; // ? AQUí (global)
+let usuarioBloqueado = false;
 
 // DIBUJAR RULETA
 function dibujarRuleta() {
@@ -154,15 +154,101 @@ function dibujarRuleta() {
 dibujarRuleta();
 
 // VALIDACION INPUT
-const nombreInput = document.getElementById("nombre");
-const apellidoInput = document.getElementById("apellido");
+const correoInput = document.getElementById("correo");
 const btnGirar = document.getElementById("btnGirar");
 
-function validarCampos() {
-  btnGirar.disabled = !(nombreInput.value.trim() && apellidoInput.value.trim());
+async function validarCampos() {
+  const correo = correoInput.value.trim().toLowerCase();
+
+  const esValido = /^[a-z0-9._%+-]+@veconinter\.com$/.test(correo);
+
+  if (!esValido) {
+    btnGirar.disabled = true;
+    btnGirar.innerText = "Girar";
+    document.getElementById("resultado").innerHTML = "";
+    return;
+  }
+
+  try {
+    const res = await fetch(FLOW_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        correo,
+        identificador: correo,
+        premio: null,
+        validar: true
+      })
+    });
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      btnGirar.disabled = true;
+      return;
+    }
+
+    // ?? YA PARTICIPÓ
+    if (data.status === "bloqueado") {
+	  usuarioBloqueado = true;
+      btnGirar.disabled = true;
+      btnGirar.innerText = "Ya participaste";
+
+      document.getElementById("resultado").innerHTML =
+         "<b>Ya participaste </b><br><small>Gracias por formar parte de esta iniciativa</small>";
+
+      return;
+    }
+
+    // ?? SIN PREMIOS
+    if (data.status === "sin_premios") {
+      btnGirar.disabled = true;
+      btnGirar.innerText = "Ruleta finalizada";
+
+      document.getElementById("resultado").innerHTML =
+        "<b>La ruleta ya finalizó</b>";
+
+      return;
+    }
+
+    // ? TODO OK
+    btnGirar.disabled = false;
+    btnGirar.innerText = "Girar";
+    document.getElementById("resultado").innerHTML = "";
+
+  } catch (error) {
+    console.error(error);
+    btnGirar.disabled = true;
+  }
 }
-nombreInput.addEventListener("input", validarCampos);
-apellidoInput.addEventListener("input", validarCampos);
+
+let timeoutValidacion;
+
+correoInput.addEventListener("input", () => {
+
+  usuarioBloqueado = false;
+
+  clearTimeout(timeoutValidacion);
+
+  const correo = correoInput.value.trim().toLowerCase();
+  const esValido = /^[a-z0-9._%+-]+@veconinter\.com$/.test(correo);
+
+  if (!esValido) {
+    btnGirar.disabled = true;
+    btnGirar.innerText = "Girar";
+    return;
+  }
+
+  // ? ACTIVAR BOTÓN INMEDIATAMENTE
+  btnGirar.disabled = true;
+  btnGirar.innerText = "Validando...";
+
+  // ? VALIDACIÓN EN BACKGROUND
+  timeoutValidacion = setTimeout(() => {
+    validarCampos();
+  }, 500); // puedes subirlo a 800–1000ms
+});
 
 function calcularDestino(sectorIndex) {
   let total = premios.length;
@@ -180,20 +266,29 @@ function calcularDestino(sectorIndex) {
 // GIRAR CON VALIDACION PREVIA
 async function girar(){
 
-  if(girando) return;
+if (usuarioBloqueado) {
+  alert("Ya participaste");
+  return;
+}
 
-  let nombre = nombreInput.value.trim();
-  let apellido = apellidoInput.value.trim();
-  let identificador = (nombre + apellido).toLowerCase().replace(/\s/g, "");
+  if(girando) return;
+  
+  // ?? BLOQUEO INMEDIATO DEL BOTÓN
+girando = true;
+btnGirar.disabled = true;
+btnGirar.innerText = "Girando...";
+btnGirar.style.pointerEvents = "none";
+
+let correo = correoInput.value.trim().toLowerCase();
+let identificador = correo; // ahora el identificador es el correo
 
   // VALIDAR ANTES
   try {
-    const res = await fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+    const res = await fetch(FLOW_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-	   nombre,
-       apellido,
+	   correo,
        identificador,
 	   premio: null,
        validar: true })
@@ -204,14 +299,21 @@ async function girar(){
     try { data = JSON.parse(text); } catch {}*/
 	const data = await res.json();
 
-    if (data.status === "bloqueado") {
-  alert("Ya participaste");
+if (data.status === "bloqueado") {
+  usuarioBloqueado = true;
+
+  alert("Ya participaste"); // ?? se mantiene
+
   btnGirar.disabled = true;
   btnGirar.innerText = "Ya participaste";
+
+  document.getElementById("resultado").innerHTML =
+    "<b>Ya participaste ??</b><br><small>Gracias por formar parte de esta iniciativa</small>";
+
   return;
 }
 
-// 🚫 NUEVO: TODOS LOS PREMIOS EN 0
+// ?? NUEVO: TODOS LOS PREMIOS EN 0
 if (data.status === "sin_premios") {
   document.getElementById("resultado").innerHTML =
     "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
@@ -224,18 +326,22 @@ if (data.status === "sin_premios") {
   } catch (e) {
   console.error(e);
   alert("Error validando participación");
+  girando = false;
+  btnGirar.disabled = false;
+  btnGirar.innerText = "Girar";
+  btnGirar.style.pointerEvents = "auto";
   return;
   }
 
   // GIRAR
-  intentos = 0; // ✅ reset correcto (solo una vez)
-  girando = true;
+  intentos = 0; // ? reset correcto (solo una vez)
+ 
 
 let total = premios.length;
 let sectorGanador = Math.floor(Math.random() * total);
 let premio = premios[sectorGanador];
 
-// ✅ USAR FUNCIÓN CENTRALIZADA
+// ? USAR FUNCIóN CENTRALIZADA
 let destino = calcularDestino(sectorGanador);
 
   let inicio = null;
@@ -245,7 +351,7 @@ let destino = calcularDestino(sectorGanador);
     if(!inicio) inicio = timestamp;
 
     let progreso = timestamp - inicio;
-    let porcentaje = Math.min(progreso / 1500, 1);
+    let porcentaje = Math.min(progreso / 2000, 1);
 
     angulo = destino * porcentaje;
 
@@ -262,6 +368,10 @@ let destino = calcularDestino(sectorGanador);
     } else {
 
       girando = false;
+	  btnGirar.style.pointerEvents = "auto";
+	  
+	   // ?? OCULTAR BOTÓN
+       btnGirar.style.display = "none";
 
       confetti({ particleCount: 150, spread: 90 });
 
@@ -272,12 +382,11 @@ let destino = calcularDestino(sectorGanador);
 "<b>" + premio + "</b><br><small>" + mensajeExtra + "</small>";
 
       // GUARDAR RESULTADO
-      fetch("https://default65bbe6da35e94c18993bee2c16cb7e.64.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8e9302c33d624fc58a0ae3268d91e120/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=zOouqwSjaqQV-RPcw834jzsTmoL_KB8qvQU83qUVd6U", {
+      fetch(FLOW_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre,
-          apellido,
+          correo,
           premio,
           identificador,
           validar: false
@@ -288,7 +397,7 @@ let destino = calcularDestino(sectorGanador);
 
   console.log("Respuesta flujo:", data);
 
-// 🚫 NUEVO: TODOS LOS PREMIOS EN 0 (MUY IMPORTANTE)
+// ?? NUEVO: TODOS LOS PREMIOS EN 0 (MUY IMPORTANTE)
 if (data.status === "sin_premios") {
   document.getElementById("resultado").innerHTML =
     "<b>&iexcl;La ruleta ha alcanzado el m&aacute;ximo de participaciones en esta oportunidad!</b>";
@@ -317,7 +426,7 @@ if (data.status === "agotado") {
   document.getElementById("resultado").innerHTML =
     "Premio agotado, Buscando otro premio disponible...";
 
-  // 🔥 REINTENTO CONTROLADO (SIN volver a validar usuario)
+  // ?? REINTENTO CONTROLADO (SIN volver a validar usuario)
   setTimeout(() => {
 
     let total = premios.length;
@@ -328,8 +437,7 @@ if (data.status === "agotado") {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        nombre,
-        apellido,
+        correo,
         premio: nuevoPremio,
         identificador,
         validar: false
@@ -348,17 +456,17 @@ if (data.status === "agotado") {
       }
 
       if (data.status === "agotado") {
-        // 🔁 vuelve a entrar aquí sin reiniciar intentos
+        // ?? vuelve a entrar aquí sin reiniciar intentos
         return girar(); // ahora sí controlado
       }
 
-      // ✅ premio válido
+      // ? premio válido
 let mensajeExtra = mensajesPremios[nuevoPremio] || "";
 
-// 🔥 CALCULAR GIRO CORRECTO
+// ?? CALCULAR GIRO CORRECTO
 let nuevoDestino = calcularDestino(nuevoSector);
 
-// 🔥 ANIMAR NUEVAMENTE LA RULETA
+// ?? ANIMAR NUEVAMENTE LA RULETA
 let inicio2 = null;
 
 function animarNuevo(timestamp) {
